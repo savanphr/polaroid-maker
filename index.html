@@ -274,28 +274,31 @@ startDist=null
 
 exportBtn.addEventListener("click", async ()=>{
 
-  const exportCanvas=document.createElement("canvas")
-  exportCanvas.width=1051
-  exportCanvas.height=1276
+  const exportCanvas = document.createElement("canvas")
+  exportCanvas.width = 1051
+  exportCanvas.height = 1276
 
-  const ectx=exportCanvas.getContext("2d")
+  const ectx = exportCanvas.getContext("2d")
 
-  // fond blanc Polaroid
-  ectx.fillStyle="white"
+  // cadre Polaroid complet
+  ectx.fillStyle = "white"
   ectx.fillRect(0,0,1051,1276)
 
-  // fenêtre photo 77x78 mm
-  const photoExportW=909
-  const photoExportH=921
-  const photoExportX=(1051-photoExportW)/2
-  const photoExportY=110
+  // dimensions fenêtre photo
+  const photoExportW = 909
+  const photoExportH = 921
+  const bottomMarginPx = 22*11.81 // 22mm en pixels ≈ 260px
+  const photoExportY = exportCanvas.height - bottomMarginPx - photoExportH
+  const photoExportX = (exportCanvas.width - photoExportW)/2
 
+  // clipping pour coins carrés
   ectx.save()
   ectx.beginPath()
-  ectx.rect(photoExportX,photoExportY,photoExportW,photoExportH)
+  ectx.rect(photoExportX, photoExportY, photoExportW, photoExportH)
   ectx.clip()
 
-  const scaleFactor=photoExportW/photoWidth
+  // appliquer zoom et position
+  const scaleFactor = photoExportW / photoWidth
 
   ectx.drawImage(
     img,
@@ -311,9 +314,9 @@ exportBtn.addEventListener("click", async ()=>{
 
   ectx.restore()
 
-  // convertir en Blob
+  // export direct iOS / fallback
   exportCanvas.toBlob(async function(blob){
-    
+
     const file = new File([blob], "polaroid_300dpi.png", { type:"image/png" })
 
     if(navigator.canShare && navigator.canShare({ files:[file] })){
@@ -323,10 +326,9 @@ exportBtn.addEventListener("click", async ()=>{
         console.log("Partage annulé:", err)
       }
     }else{
-      // fallback téléchargement classique
-      const link=document.createElement("a")
-      link.href=URL.createObjectURL(blob)
-      link.download="polaroid_300dpi.png"
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      link.download = "polaroid_300dpi.png"
       link.click()
     }
 
