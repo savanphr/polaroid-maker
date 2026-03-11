@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
 <title>Polaroid Maker</title>
 
@@ -17,9 +17,9 @@ html,body{
 margin:0;
 padding:0;
 background:#111;
-font-family:-apple-system, BlinkMacSystemFont, sans-serif;
-color:white;
+font-family:-apple-system,BlinkMacSystemFont;
 overflow:hidden;
+color:white;
 }
 
 canvas{
@@ -29,10 +29,7 @@ left:0;
 width:100vw;
 height:100vh;
 touch-action:none;
-background:#222;
 }
-
-/* barre supérieure */
 
 .topbar{
 position:absolute;
@@ -43,15 +40,13 @@ height:60px;
 display:flex;
 align-items:center;
 justify-content:center;
-font-weight:600;
-font-size:18px;
 background:rgba(0,0,0,0.4);
 backdrop-filter:blur(10px);
+font-weight:600;
 }
 
-/* boutons */
-
 .controls{
+
 position:absolute;
 bottom:calc(20px + env(safe-area-inset-bottom));
 left:0;
@@ -59,81 +54,86 @@ right:0;
 display:flex;
 justify-content:center;
 gap:15px;
+
 }
 
 button{
-background:white;
+
 border:none;
 border-radius:30px;
 padding:14px 22px;
 font-size:16px;
 font-weight:600;
-box-shadow:0 4px 10px rgba(0,0,0,0.3);
+box-shadow:0 4px 12px rgba(0,0,0,0.4);
+
+}
+
+.import{
+background:#0A84FF;
+color:white;
+}
+
+.export{
+background:#30D158;
+color:white;
 }
 
 input[type=file]{
 display:none;
 }
 
-.uploadBtn{
-background:#0A84FF;
-color:white;
-}
-
-.exportBtn{
-background:#30D158;
-color:white;
-}
-
 </style>
+
 </head>
 
 <body>
 
 <div class="topbar">Polaroid Maker</div>
 
-<input type="file" id="upload" accept="image/*" capture="environment">
+<input type="file" id="upload" accept="image/*">
 
 <canvas id="canvas"></canvas>
 
 <div class="controls">
 
-<button class="uploadBtn" onclick="upload.click()">Importer</button>
+<button class="import" id="importBtn">Importer</button>
 
-<button class="exportBtn" onclick="exportImage()">Exporter</button>
+<button class="export" id="exportBtn">Exporter</button>
 
 </div>
 
 <script>
 
-const canvas = document.getElementById("canvas")
-const ctx = canvas.getContext("2d")
+const canvas=document.getElementById("canvas")
+const ctx=canvas.getContext("2d")
 
-canvas.width = window.innerWidth
-canvas.height = window.innerHeight
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
 
-const upload = document.getElementById("upload")
+const upload=document.getElementById("upload")
+const importBtn=document.getElementById("importBtn")
+const exportBtn=document.getElementById("exportBtn")
 
-let img = new Image()
+let img=new Image()
 
-let scale = 1
-let posX = 0
-let posY = 0
+let scale=1
+let posX=0
+let posY=0
 
 let startDist=null
 let startScale=1
 
-const frameWidth = canvas.width * 0.8
-const frameHeight = frameWidth * 1.21
+const frameWidth=canvas.width*0.8
+const frameHeight=frameWidth*1.21
 
-const photoWidth = frameWidth * 0.86
-const photoHeight = photoWidth * 1.01
+const photoWidth=frameWidth*0.86
+const photoHeight=photoWidth*1.01
 
-const frameX = (canvas.width-frameWidth)/2
-const frameY = (canvas.height-frameHeight)/2
+const frameX=(canvas.width-frameWidth)/2
+const frameY=(canvas.height-frameHeight)/2
 
-const photoX = frameX + (frameWidth-photoWidth)/2
-const photoY = frameY + 20
+const photoX=frameX+(frameWidth-photoWidth)/2
+const photoY=frameY+20
 
 function draw(){
 
@@ -169,6 +169,14 @@ ctx.restore()
 
 draw()
 
+// ouverture photothèque
+
+importBtn.addEventListener("click",()=>{
+upload.click()
+})
+
+// chargement image
+
 upload.addEventListener("change",function(){
 
 const file=this.files[0]
@@ -196,6 +204,8 @@ reader.readAsDataURL(file)
 
 })
 
+// déplacement
+
 let dragging=false
 let startX,startY
 
@@ -220,6 +230,8 @@ draw()
 })
 
 canvas.addEventListener("pointerup",()=>dragging=false)
+
+// pinch zoom
 
 canvas.addEventListener("touchmove",function(e){
 
@@ -250,7 +262,9 @@ draw()
 
 canvas.addEventListener("touchend",()=>startDist=null)
 
-function exportImage(){
+// export 300 dpi
+
+exportBtn.addEventListener("click",()=>{
 
 const exportCanvas=document.createElement("canvas")
 
@@ -281,14 +295,17 @@ link.href=exportCanvas.toDataURL()
 
 link.click()
 
-}
+})
+
+// PWA
 
 if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js')
+
+navigator.serviceWorker.register("sw.js")
+
 }
 
 </script>
 
 </body>
 </html>
-

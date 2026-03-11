@@ -1,6 +1,7 @@
-const CACHE="polaroid-v1"
+const CACHE="polaroid-cache-v1"
 
 self.addEventListener("install",e=>{
+
 e.waitUntil(
 caches.open(CACHE).then(cache=>{
 return cache.addAll([
@@ -10,13 +11,20 @@ return cache.addAll([
 ])
 })
 )
+
 })
 
 self.addEventListener("fetch",e=>{
+
 e.respondWith(
+
 caches.match(e.request).then(r=>{
+
 return r || fetch(e.request)
+
 })
+
 )
+
 })
 
