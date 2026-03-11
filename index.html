@@ -272,38 +272,65 @@ startDist=null
 
 // export 300 dpi avec coins carrés
 
-exportBtn.addEventListener("click",()=>{
+exportBtn.addEventListener("click", async ()=>{
 
-const exportCanvas=document.createElement("canvas")
+  const exportCanvas=document.createElement("canvas")
+  exportCanvas.width=1051
+  exportCanvas.height=1276
 
-exportCanvas.width=1051
-exportCanvas.height=1276
+  const ectx=exportCanvas.getContext("2d")
 
-const ectx=exportCanvas.getContext("2d")
+  // fond blanc Polaroid
+  ectx.fillStyle="white"
+  ectx.fillRect(0,0,1051,1276)
 
-ectx.fillStyle="white"
-ectx.fillRect(0,0,1051,1276)
+  // fenêtre photo 77x78 mm
+  const photoExportW=909
+  const photoExportH=921
+  const photoExportX=(1051-photoExportW)/2
+  const photoExportY=110
 
-const scaleFactor=770/photoWidth
+  ectx.save()
+  ectx.beginPath()
+  ectx.rect(photoExportX,photoExportY,photoExportW,photoExportH)
+  ectx.clip()
 
-ectx.drawImage(
-img,
-(posX)*-1/scale,
-(posY)*-1/scale,
-img.width,
-img.height,
-140,
-150,
-img.width*scale*scaleFactor,
-img.height*scale*scaleFactor
-)
+  const scaleFactor=photoExportW/photoWidth
 
-const link=document.createElement("a")
+  ectx.drawImage(
+    img,
+    -posX/scale,
+    -posY/scale,
+    img.width,
+    img.height,
+    photoExportX,
+    photoExportY,
+    img.width*scale*scaleFactor,
+    img.height*scale*scaleFactor
+  )
 
-link.download="polaroid_300dpi.png"
-link.href=exportCanvas.toDataURL("image/png")
+  ectx.restore()
 
-link.click()
+  // convertir en Blob
+  exportCanvas.toBlob(async function(blob){
+    
+    const file = new File([blob], "polaroid_300dpi.png", { type:"image/png" })
+
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      try{
+        await navigator.share({ files:[file], title:"Polaroid", text:"Voici votre photo Polaroid" })
+      }catch(err){
+        console.log("Partage annulé:", err)
+      }
+    }else{
+      // fallback téléchargement classique
+      const link=document.createElement("a")
+      link.href=URL.createObjectURL(blob)
+      link.download="polaroid_300dpi.png"
+      link.click()
+    }
+
+  }, "image/png")
 
 })
 
