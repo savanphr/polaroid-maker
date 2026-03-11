@@ -17,7 +17,7 @@ html,body{
 margin:0;
 padding:0;
 background:#111;
-font-family:-apple-system,BlinkMacSystemFont;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 overflow:hidden;
 color:white;
 }
@@ -40,7 +40,7 @@ height:60px;
 display:flex;
 align-items:center;
 justify-content:center;
-background:rgba(0,0,0,0.4);
+background:rgba(0,0,0,0.5);
 backdrop-filter:blur(10px);
 font-weight:600;
 }
@@ -48,23 +48,23 @@ font-weight:600;
 .controls{
 
 position:absolute;
-bottom:calc(20px + env(safe-area-inset-bottom));
+bottom:calc(25px + env(safe-area-inset-bottom));
 left:0;
 right:0;
+
 display:flex;
 justify-content:center;
 gap:15px;
 
 }
 
-button{
+.button{
 
-border:none;
-border-radius:30px;
+border-radius:28px;
 padding:14px 22px;
-font-size:16px;
 font-weight:600;
-box-shadow:0 4px 12px rgba(0,0,0,0.4);
+font-size:16px;
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
 
 }
 
@@ -96,9 +96,13 @@ display:none;
 
 <div class="controls">
 
-<button class="import" id="importBtn">Importer</button>
+<label class="button import" for="upload">
+Importer photo
+</label>
 
-<button class="export" id="exportBtn">Exporter</button>
+<button class="button export" id="exportBtn">
+Exporter 300dpi
+</button>
 
 </div>
 
@@ -111,7 +115,6 @@ canvas.width=window.innerWidth
 canvas.height=window.innerHeight
 
 const upload=document.getElementById("upload")
-const importBtn=document.getElementById("importBtn")
 const exportBtn=document.getElementById("exportBtn")
 
 let img=new Image()
@@ -135,6 +138,7 @@ const frameY=(canvas.height-frameHeight)/2
 const photoX=frameX+(frameWidth-photoWidth)/2
 const photoY=frameY+20
 
+
 function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height)
@@ -150,8 +154,8 @@ ctx.clip()
 
 if(img.src){
 
-let w=img.width*scale
-let h=img.height*scale
+const w=img.width*scale
+const h=img.height*scale
 
 ctx.drawImage(
 img,
@@ -169,17 +173,11 @@ ctx.restore()
 
 draw()
 
-// ouverture photothèque
-
-importBtn.addEventListener("click",()=>{
-upload.click()
-})
-
-// chargement image
 
 upload.addEventListener("change",function(){
 
 const file=this.files[0]
+
 if(!file) return
 
 const reader=new FileReader()
@@ -204,15 +202,18 @@ reader.readAsDataURL(file)
 
 })
 
+
 // déplacement
 
 let dragging=false
 let startX,startY
 
 canvas.addEventListener("pointerdown",e=>{
+
 dragging=true
 startX=e.clientX
 startY=e.clientY
+
 })
 
 canvas.addEventListener("pointermove",e=>{
@@ -230,6 +231,7 @@ draw()
 })
 
 canvas.addEventListener("pointerup",()=>dragging=false)
+
 
 // pinch zoom
 
@@ -252,6 +254,7 @@ startScale=scale
 }else{
 
 scale=startScale*(dist/startDist)
+
 draw()
 
 }
@@ -260,9 +263,14 @@ draw()
 
 })
 
-canvas.addEventListener("touchend",()=>startDist=null)
+canvas.addEventListener("touchend",()=>{
 
-// export 300 dpi
+startDist=null
+
+})
+
+
+// export 300 dpi avec coins carrés
 
 exportBtn.addEventListener("click",()=>{
 
@@ -276,28 +284,28 @@ const ectx=exportCanvas.getContext("2d")
 ectx.fillStyle="white"
 ectx.fillRect(0,0,1051,1276)
 
+const scaleFactor=770/photoWidth
+
 ectx.drawImage(
-canvas,
-photoX,
-photoY,
-photoWidth,
-photoHeight,
+img,
+(posX)*-1/scale,
+(posY)*-1/scale,
+img.width,
+img.height,
 140,
 150,
-770,
-780
+img.width*scale*scaleFactor,
+img.height*scale*scaleFactor
 )
 
 const link=document.createElement("a")
 
-link.download="polaroid.png"
-link.href=exportCanvas.toDataURL()
+link.download="polaroid_300dpi.png"
+link.href=exportCanvas.toDataURL("image/png")
 
 link.click()
 
 })
-
-// PWA
 
 if('serviceWorker' in navigator){
 
