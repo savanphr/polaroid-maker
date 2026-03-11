@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Polaroid Maker</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+
+<style>
+
+html,body{
+margin:0;
+padding:0;
+background:#111;
+font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+color:white;
+overflow:hidden;
+}
+
+canvas{
+position:absolute;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+touch-action:none;
+background:#222;
+}
+
+/* barre supérieure */
+
+.topbar{
+position:absolute;
+top:env(safe-area-inset-top);
+left:0;
+right:0;
+height:60px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:600;
+font-size:18px;
+background:rgba(0,0,0,0.4);
+backdrop-filter:blur(10px);
+}
+
+/* boutons */
+
+.controls{
+position:absolute;
+bottom:calc(20px + env(safe-area-inset-bottom));
+left:0;
+right:0;
+display:flex;
+justify-content:center;
+gap:15px;
+}
+
+button{
+background:white;
+border:none;
+border-radius:30px;
+padding:14px 22px;
+font-size:16px;
+font-weight:600;
+box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+
+input[type=file]{
+display:none;
+}
+
+.uploadBtn{
+background:#0A84FF;
+color:white;
+}
+
+.exportBtn{
+background:#30D158;
+color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">Polaroid Maker</div>
+
+<input type="file" id="upload" accept="image/*" capture="environment">
+
+<canvas id="canvas"></canvas>
+
+<div class="controls">
+
+<button class="uploadBtn" onclick="upload.click()">Importer</button>
+
+<button class="exportBtn" onclick="exportImage()">Exporter</button>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas")
+const ctx = canvas.getContext("2d")
+
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+
+const upload = document.getElementById("upload")
+
+let img = new Image()
+
+let scale = 1
+let posX = 0
+let posY = 0
+
+let startDist=null
+let startScale=1
+
+const frameWidth = canvas.width * 0.8
+const frameHeight = frameWidth * 1.21
+
+const photoWidth = frameWidth * 0.86
+const photoHeight = photoWidth * 1.01
+
+const frameX = (canvas.width-frameWidth)/2
+const frameY = (canvas.height-frameHeight)/2
+
+const photoX = frameX + (frameWidth-photoWidth)/2
+const photoY = frameY + 20
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+ctx.fillStyle="white"
+ctx.fillRect(frameX,frameY,frameWidth,frameHeight)
+
+ctx.save()
+
+ctx.beginPath()
+ctx.rect(photoX,photoY,photoWidth,photoHeight)
+ctx.clip()
+
+if(img.src){
+
+let w=img.width*scale
+let h=img.height*scale
+
+ctx.drawImage(
+img,
+photoX+posX,
+photoY+posY,
+w,
+h
+)
+
+}
+
+ctx.restore()
+
+}
+
+draw()
+
+upload.addEventListener("change",function(){
+
+const file=this.files[0]
+if(!file) return
+
+const reader=new FileReader()
+
+reader.onload=function(e){
+
+img.onload=function(){
+
+scale=photoWidth/img.width
+posX=0
+posY=0
+
+draw()
+
+}
+
+img.src=e.target.result
+
+}
+
+reader.readAsDataURL(file)
+
+})
+
+let dragging=false
+let startX,startY
+
+canvas.addEventListener("pointerdown",e=>{
+dragging=true
+startX=e.clientX
+startY=e.clientY
+})
+
+canvas.addEventListener("pointermove",e=>{
+
+if(!dragging) return
+
+posX+=e.clientX-startX
+posY+=e.clientY-startY
+
+startX=e.clientX
+startY=e.clientY
+
+draw()
+
+})
+
+canvas.addEventListener("pointerup",()=>dragging=false)
+
+canvas.addEventListener("touchmove",function(e){
+
+if(e.touches.length==2){
+
+e.preventDefault()
+
+let dx=e.touches[0].clientX-e.touches[1].clientX
+let dy=e.touches[0].clientY-e.touches[1].clientY
+
+let dist=Math.sqrt(dx*dx+dy*dy)
+
+if(!startDist){
+
+startDist=dist
+startScale=scale
+
+}else{
+
+scale=startScale*(dist/startDist)
+draw()
+
+}
+
+}
+
+})
+
+canvas.addEventListener("touchend",()=>startDist=null)
+
+function exportImage(){
+
+const exportCanvas=document.createElement("canvas")
+
+exportCanvas.width=1051
+exportCanvas.height=1276
+
+const ectx=exportCanvas.getContext("2d")
+
+ectx.fillStyle="white"
+ectx.fillRect(0,0,1051,1276)
+
+ectx.drawImage(
+canvas,
+photoX,
+photoY,
+photoWidth,
+photoHeight,
+140,
+150,
+770,
+780
+)
+
+const link=document.createElement("a")
+
+link.download="polaroid.png"
+link.href=exportCanvas.toDataURL()
+
+link.click()
+
+}
+
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js')
+}
+
+</script>
+
+</body>
+</html>
+
